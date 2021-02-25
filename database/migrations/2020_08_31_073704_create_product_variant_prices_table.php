@@ -21,7 +21,8 @@ class CreateProductVariantPricesTable extends Migration
             $table->double('price');
             $table->integer('stock')->default(0);
             $table->foreignId('product_id')->constrained()->onDelete('cascade');
-            $table->timestamps();
+            $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('updated_at')->useCurrent();
         });
     }
 

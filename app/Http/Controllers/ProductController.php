@@ -7,7 +7,7 @@ use App\Models\ProductVariant;
 use App\Models\ProductVariantPrice;
 use App\Models\Variant;
 use Illuminate\Http\Request;
-
+use Carbon;
 class ProductController extends Controller
 {
     /**
@@ -17,7 +17,18 @@ class ProductController extends Controller
      */
     public function index()
     {
-        return view('products.index');
+       
+        $variants = Variant::all();
+        $products=Product::with('prices.variant_one','prices.variant_two','prices.variant_three')->paginate(2);
+        // foreach ($products as $key => $value) {
+        //   // print_r($value->prices);
+        //     foreach ($value->prices as $k => $val) {
+        //         //print_r($val->variant_one->variant);
+        //     }
+        // }
+        //return;
+        //return $products;
+        return view('products.index',compact('products','variants'));
     }
 
     /**
@@ -39,7 +50,61 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
+        return $request->file->getClientOriginalExtension();
+       $prices=$request->product_variant_prices;
 
+        $vatrints=[
+            'product_variant_one',
+            'product_variant_two',
+            'product_variant_three',
+        ];
+
+        $product_id=Product::create([
+            'title'=>$request['title'],
+            'sku'=>$request['sku'],
+            'description'=>$request['description']
+        ])->id;
+        
+        $cross_products;
+        foreach ($request->product_variant as $key => $value) {
+            foreach ($value['tags'] as $k => $val) {
+                $product_variant_ids[$key][]= ProductVariant::create([
+                    'variant'=>$val,
+                    'variant_id'=>$value['option'],
+                    'product_id'=>$product_id,
+                ])->id;  
+            }
+        }
+
+        $cross_products=collect($product_variant_ids[0]);
+        if (array_key_exists(1,$product_variant_ids) && array_key_exists(2,$product_variant_ids)) {
+            $cross_products=$cross_products->crossJoin($product_variant_ids[1],$product_variant_ids[2]);
+        }elseif (array_key_exists(1,$product_variant_ids)) {
+            $cross_products=$cross_products->crossJoin($product_variant_ids[1]);
+        }
+        if (count($product_variant_ids) == count($product_variant_ids, COUNT_RECURSIVE)) 
+        {
+          echo 'MyArray is not multidimensional';
+        }
+        else
+        {
+            $product_prices=collect([]);
+            foreach ($cross_products as $key => $cross_product) {
+                $vrnt=[];
+                foreach ($cross_product as $tk => $tv) {
+                    $vrnt[$vatrints[$tk]]=$tv;
+                }
+                $product_prices[$key]=array_merge($vrnt,[
+                        'price'=>$prices[$key]['price'],
+                        'stock'=>$prices[$key]['stock'],
+                        'product_id'=>$product_id
+                    ]);
+            }
+            ProductVariantPrice::insert($product_prices->toArray());
+            return $product_prices;
+        }
+            
+        return $cross;
     }
 
 
@@ -49,9 +114,31 @@ class ProductController extends Controller
      * @param \App\Models\Product $product
      * @return \Illuminate\Http\Response
      */
+    public function search(Request $product)
+    {
+        $title=$product->title;
+        $vid=$product->variantid;
+        $from=$product->price_from;
+        $to=$product->price_to;
+        $date=$product->date;
+
+        $products=Product::where([['title', 'LIKE', "%{$title}%"]])
+        ->whereDate('created_at',$date)
+        ->whereHas('variants', function ($query) use($vid) {
+            $query->where('variant_id', '=', $vid);
+        })
+        ->with(['prices'=>function($query) use($from, $to)
+        {
+            return $query->with('variant_one','variant_two','variant_three')->whereBetween('price',[$from,$to]);
+        }])
+        ->paginate(2);
+
+        $variants = Variant::all();
+        return view('products.index',compact('products','variants'));
+    }
     public function show($product)
     {
-
+       
     }
 
     /**
