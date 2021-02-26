@@ -149,8 +149,17 @@ class ProductController extends Controller
      */
     public function edit(Product $product)
     {
-        $variants = Variant::all();
-        return view('products.edit', compact('variants'));
+        //  $id=$product->id;
+        // $data['variants'] = Variant::whereHas('product_variants',function ($query) use($id)
+        // {
+        //     $query->where('product_id',$id);
+        // })->get();
+        $data['variants'] = Variant::all();
+        $data['product']=$product;
+        $data['product']['product_variants']=ProductVariant::where('product_id',$product->id)->get()->groupBy('variant_id');
+         $data['prices']=$product->load('prices.variant_one','prices.variant_two','prices.variant_three');
+
+        return view('products.edit', $data);
     }
 
     /**

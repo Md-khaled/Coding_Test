@@ -110,6 +110,14 @@ export default {
         variants: {
             type: Array,
             required: true
+        },
+        products: {
+            type: Object,
+            required: true
+        },
+        prices: {
+            type: Object,
+            required: true
         }
     },
     data() {
@@ -139,7 +147,7 @@ export default {
             let all_variants = this.variants.map(el => el.id)
             let selected_variants = this.product_variant.map(el => el.option);
             let available_variants = all_variants.filter(entry1 => !selected_variants.some(entry2 => entry1 == entry2))
-            // console.log(available_variants)
+            console.log(available_variants)
 
             this.product_variant.push({
                 option: available_variants[0],
@@ -201,7 +209,41 @@ export default {
 
     },
     mounted() {
-        console.log('Component mounted.')
+        this.product_name=this.products.title;
+        this.product_sku=this.products.sku;
+        this.description=this.products.description;
+        this.product_variant=[];
+        var available_variants=[];
+        var ref=this;
+        /*product_variant*/
+        $.each(ref.products.product_variants,function(index,value) {
+            let tag=[];
+            available_variants[index];
+             $.each(value,function(key,variant) {
+                tag.push(variant.variant);
+             })
+            ref.product_variant.push({
+                option: index,
+                tags: tag
+            })
+        })
+        
+        /*product_prices*/
+        $.each(ref.prices.prices,function(index,value) {
+            let items='';
+            let variant_one=(value.variant_one == null)?'':value.variant_one.variant;
+            let variant_two=value.variant_two == null?'':value.variant_two.variant;
+            let variant_three=value.variant_three == null?'':value.variant_three.variant;
+            items=variant_one+'/'+variant_two+'/'+variant_three;
+            
+            ref.product_variant_prices.push({
+                    title: items,
+                    price: value.price,
+                    stock: value.stock
+                })
+        
+            
+        })
     }
 }
 </script>

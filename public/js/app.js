@@ -2024,6 +2024,14 @@ __webpack_require__.r(__webpack_exports__);
     variants: {
       type: Array,
       required: true
+    },
+    products: {
+      type: Object,
+      required: true
+    },
+    prices: {
+      type: Object,
+      required: true
     }
   },
   data: function data() {
@@ -2060,8 +2068,8 @@ __webpack_require__.r(__webpack_exports__);
         return !selected_variants.some(function (entry2) {
           return entry1 == entry2;
         });
-      }); // console.log(available_variants)
-
+      });
+      console.log(available_variants);
       this.product_variant.push({
         option: available_variants[0],
         tags: []
@@ -2117,7 +2125,39 @@ __webpack_require__.r(__webpack_exports__);
     }
   },
   mounted: function mounted() {
-    console.log('Component mounted.');
+    this.product_name = this.products.title;
+    this.product_sku = this.products.sku;
+    this.description = this.products.description;
+    this.product_variant = [];
+    var available_variants = [];
+    var ref = this;
+    /*product_variant*/
+
+    $.each(ref.products.product_variants, function (index, value) {
+      var tag = [];
+      available_variants[index];
+      $.each(value, function (key, variant) {
+        tag.push(variant.variant);
+      });
+      ref.product_variant.push({
+        option: index,
+        tags: tag
+      });
+    });
+    /*product_prices*/
+
+    $.each(ref.prices.prices, function (index, value) {
+      var items = '';
+      var variant_one = value.variant_one == null ? '' : value.variant_one.variant;
+      var variant_two = value.variant_two == null ? '' : value.variant_two.variant;
+      var variant_three = value.variant_three == null ? '' : value.variant_three.variant;
+      items = variant_one + '/' + variant_two + '/' + variant_three;
+      ref.product_variant_prices.push({
+        title: items,
+        price: value.price,
+        stock: value.stock
+      });
+    });
   }
 });
 
