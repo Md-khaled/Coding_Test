@@ -91,7 +91,7 @@
             </div>
         </div>
 
-        <button @click="saveProduct" type="submit" class="btn btn-lg btn-primary">Save</button>
+        <button @click="saveProduct" type="submit" class="btn btn-lg btn-primary"><span v-if="Mode"></div>Update</span> <span v-else>Save</span></button>
         <button type="button" class="btn btn-secondary btn-lg">Cancel</button>
     </section>
 </template>
@@ -107,17 +107,19 @@ export default {
         InputTag
     },
     props: {
+        Mode: {
+            type: Boolean,
+            default:false
+        },
         variants: {
             type: Array,
             required: true
         },
         products: {
             type: Object,
-            required: true
         },
         prices: {
             type: Object,
-            required: true
         }
     },
     data() {
@@ -134,10 +136,16 @@ export default {
             ],
             product_variant_prices: [],
             dropzoneOptions: {
-                url: 'https://httpbin.org/post',
-                thumbnailWidth: 150,
+                url: '/uploadImage',
+                thumbnailWidth: 215,
                 maxFilesize: 0.5,
-                headers: {"My-Awesome-Header": "header value"}
+                acceptedFiles: '.jpg, .jpeg, .png .gif',
+                addRemoveLinks: true,
+                dictDefaultMessage: "<i class='fas fa-cloud-upload-alt'></i>UPLOAD ME",
+                headers: {
+                    "My-Awesome-Header": "header value",
+                    "X-CSRF-TOKEN": document.head.querySelector("[name=csrf-token]").content
+                }
             }
         }
     },
@@ -196,54 +204,70 @@ export default {
                 product_variant_prices: this.product_variant_prices
             }
 
+            if(this.Mode){
+                axios.put('/product/'+this.products.id, product).then(response => {
+                    console.log(response.data);
+                }).catch(error => {
+                    console.log(error);
+                })
 
-            axios.post('/product', product).then(response => {
-                console.log(response.data);
-            }).catch(error => {
-                console.log(error);
-            })
+            }else{
+                axios.post('/product', product).then(response => {
+                    console.log(response.data);
+                }).catch(error => {
+                    console.log(error);
+                })
+            }
 
-            console.log(product);
+            
         }
 
 
     },
     mounted() {
-        this.product_name=this.products.title;
-        this.product_sku=this.products.sku;
-        this.description=this.products.description;
-        this.product_variant=[];
-        var available_variants=[];
-        var ref=this;
-        /*product_variant*/
-        $.each(ref.products.product_variants,function(index,value) {
-            let tag=[];
-            available_variants[index];
-             $.each(value,function(key,variant) {
-                tag.push(variant.variant);
-             })
-            ref.product_variant.push({
-                option: index,
-                tags: tag
-            })
-        })
-        
-        /*product_prices*/
-        $.each(ref.prices.prices,function(index,value) {
-            let items='';
-            let variant_one=(value.variant_one == null)?'':value.variant_one.variant;
-            let variant_two=value.variant_two == null?'':value.variant_two.variant;
-            let variant_three=value.variant_three == null?'':value.variant_three.variant;
-            items=variant_one+'/'+variant_two+'/'+variant_three;
-            
-            ref.product_variant_prices.push({
-                    title: items,
-                    price: value.price,
-                    stock: value.stock
+        if(this.Mode){
+            this.product_name=this.products.title;
+            this.product_sku=this.products.sku;
+            this.description=this.products.description;
+            this.product_variant=[];
+            var available_variants=[];
+            var ref=this;
+            /*product_variant*/
+            $.each(ref.products.product_variants,function(index,value) {
+                let tag=[];
+                available_variants[index];
+                 $.each(value,function(key,variant) {
+                    tag.push(variant.variant);
+                 })
+                ref.product_variant.push({
+                    option: index,
+                    tags: tag
                 })
-        
+            })
             
-        })
+            /*product_prices*/
+            $.each(ref.prices.prices,function(index,value) {
+                let items='';
+                let variant_one=(value.variant_one == null)?'':value.variant_one.variant;
+                let variant_two=value.variant_two == null?'':value.variant_two.variant;
+                let variant_three=value.variant_three == null?'':value.variant_three.variant;
+                items=variant_one+'/'+variant_two+'/'+variant_three;
+                
+                ref.product_variant_prices.push({
+                        title: items,
+                        price: value.price,
+                        stock: value.stock
+                    })
+            
+                
+            })
+
+            
+            //var url = require("../assets/child.jpeg");
+            //this.$refs.myVueDropzone.manuallyAddFile(file, url);
+            //https://github.com/rowanwins/vue-dropzone/issues/455
+            console.log(this.Mode);
+        }
     }
 }
 </script>

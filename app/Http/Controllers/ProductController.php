@@ -7,9 +7,11 @@ use App\Models\ProductVariant;
 use App\Models\ProductVariantPrice;
 use App\Models\Variant;
 use Illuminate\Http\Request;
+use App\Traits\ProductTrait;
 use Carbon;
 class ProductController extends Controller
 {
+    use ProductTrait;
     /**
      * Display a listing of the resource.
      *
@@ -50,6 +52,13 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
+        
+        if($this->uploadImage($request)){
+            return 'This image field is required';
+        }
+        $imagepath=$this->uploadImage($request);
+        
+        return $request;
         return $request->file->getClientOriginalExtension();
        $prices=$request->product_variant_prices;
 
@@ -171,9 +180,41 @@ class ProductController extends Controller
      */
     public function update(Request $request, Product $product)
     {
-        //
-    }
+        if ($request->hasFile('file')) {
+           return 'sfsdf' ;
+        }
+        $image=$request->file('file');
+        $imageName=$image->getClientOriginalName();
+        return $imageName;
+        $product->update([
+            'title' =>$request->title,
+            'sku' =>$request->sku,
+            'description' =>$request->description,
+        ]);
+        $ids=array_column($request->product_variant, 'option');
+        $product->productvariants()->detach($ids);
+        $product->prices()->delete();
+        // foreach ($request->product_variant as $key => $value) {
+        //     foreach ($value['tags']  as $k => $val) {
+        //         $product->productvariants()->attach($value['option'],['variant'=>$val]);
+        //        // $variant->push([$value['option']=>['variant'=>$val]]);
+        //     }
+        // }
+        //         $product->productvariants()->attach($value['option'],['variant'=>$val]);
 
+        // $product->productvariants()->attach($variant->toArray());
+         foreach ($request->product_variant as $key => $value) {
+            foreach ($value['tags'] as $k => $val) {
+                $product_variant_ids[$key][]= ProductVariant::create([
+                    'variant'=>$val,
+                    'variant_id'=>$value['option'],
+                    'product_id'=>$product->id,
+                ])->id;  
+            }
+        }
+        return $variant;
+        return $request->product_variant;
+    }
     /**
      * Remove the specified resource from storage.
      *

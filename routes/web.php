@@ -25,6 +25,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('product-variant', 'VariantController');
     Route::resource('product', 'ProductController');
     Route::post('search-product', 'ProductController@search')->name('product.search');
+    Route::post('uploadImage/{id?}', 'ProductController@uploadImage')->name('uploadimg');
     Route::resource('blog', 'BlogController');
     Route::resource('blog-category', 'BlogCategoryController');
 });

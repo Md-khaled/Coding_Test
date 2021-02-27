@@ -2021,17 +2021,19 @@ __webpack_require__.r(__webpack_exports__);
     InputTag: vue_input_tag__WEBPACK_IMPORTED_MODULE_2___default.a
   },
   props: {
+    Mode: {
+      type: Boolean,
+      "default": false
+    },
     variants: {
       type: Array,
       required: true
     },
     products: {
-      type: Object,
-      required: true
+      type: Object
     },
     prices: {
-      type: Object,
-      required: true
+      type: Object
     }
   },
   data: function data() {
@@ -2046,11 +2048,15 @@ __webpack_require__.r(__webpack_exports__);
       }],
       product_variant_prices: [],
       dropzoneOptions: {
-        url: 'https://httpbin.org/post',
-        thumbnailWidth: 150,
+        url: '/uploadImage',
+        thumbnailWidth: 215,
         maxFilesize: 0.5,
+        acceptedFiles: '.jpg, .jpeg, .png .gif',
+        addRemoveLinks: true,
+        dictDefaultMessage: "<i class='fas fa-cloud-upload-alt'></i>UPLOAD ME",
         headers: {
-          "My-Awesome-Header": "header value"
+          "My-Awesome-Header": "header value",
+          "X-CSRF-TOKEN": document.head.querySelector("[name=csrf-token]").content
         }
       }
     };
@@ -2116,48 +2122,62 @@ __webpack_require__.r(__webpack_exports__);
         product_variant: this.product_variant,
         product_variant_prices: this.product_variant_prices
       };
-      axios.post('/product', product).then(function (response) {
-        console.log(response.data);
-      })["catch"](function (error) {
-        console.log(error);
-      });
-      console.log(product);
+
+      if (this.Mode) {
+        axios.put('/product/' + this.products.id, product).then(function (response) {
+          console.log(response.data);
+        })["catch"](function (error) {
+          console.log(error);
+        });
+      } else {
+        axios.post('/product', product).then(function (response) {
+          console.log(response.data);
+        })["catch"](function (error) {
+          console.log(error);
+        });
+      }
     }
   },
   mounted: function mounted() {
-    this.product_name = this.products.title;
-    this.product_sku = this.products.sku;
-    this.description = this.products.description;
-    this.product_variant = [];
-    var available_variants = [];
-    var ref = this;
-    /*product_variant*/
+    if (this.Mode) {
+      this.product_name = this.products.title;
+      this.product_sku = this.products.sku;
+      this.description = this.products.description;
+      this.product_variant = [];
+      var available_variants = [];
+      var ref = this;
+      /*product_variant*/
 
-    $.each(ref.products.product_variants, function (index, value) {
-      var tag = [];
-      available_variants[index];
-      $.each(value, function (key, variant) {
-        tag.push(variant.variant);
+      $.each(ref.products.product_variants, function (index, value) {
+        var tag = [];
+        available_variants[index];
+        $.each(value, function (key, variant) {
+          tag.push(variant.variant);
+        });
+        ref.product_variant.push({
+          option: index,
+          tags: tag
+        });
       });
-      ref.product_variant.push({
-        option: index,
-        tags: tag
-      });
-    });
-    /*product_prices*/
+      /*product_prices*/
 
-    $.each(ref.prices.prices, function (index, value) {
-      var items = '';
-      var variant_one = value.variant_one == null ? '' : value.variant_one.variant;
-      var variant_two = value.variant_two == null ? '' : value.variant_two.variant;
-      var variant_three = value.variant_three == null ? '' : value.variant_three.variant;
-      items = variant_one + '/' + variant_two + '/' + variant_three;
-      ref.product_variant_prices.push({
-        title: items,
-        price: value.price,
-        stock: value.stock
-      });
-    });
+      $.each(ref.prices.prices, function (index, value) {
+        var items = '';
+        var variant_one = value.variant_one == null ? '' : value.variant_one.variant;
+        var variant_two = value.variant_two == null ? '' : value.variant_two.variant;
+        var variant_three = value.variant_three == null ? '' : value.variant_three.variant;
+        items = variant_one + '/' + variant_two + '/' + variant_three;
+        ref.product_variant_prices.push({
+          title: items,
+          price: value.price,
+          stock: value.stock
+        });
+      }); //var url = require("../assets/child.jpeg");
+      //this.$refs.myVueDropzone.manuallyAddFile(file, url);
+      //https://github.com/rowanwins/vue-dropzone/issues/455
+
+      console.log(this.Mode);
+    }
   }
 });
 
@@ -50821,7 +50841,7 @@ var render = function() {
         attrs: { type: "submit" },
         on: { click: _vm.saveProduct }
       },
-      [_vm._v("Save")]
+      [_vm.Mode ? _c("span", [_vm._v("Update")]) : _c("span", [_vm._v("Save")])]
     ),
     _vm._v(" "),
     _c(
