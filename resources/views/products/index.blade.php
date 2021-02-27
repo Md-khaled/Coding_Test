@@ -66,7 +66,7 @@
 
                                     @forelse($product->prices as $price)
                                         <dt class="col-sm-3 pb-0">
-                                            @upper($price->variant_one->variant??'')/ @upper($price->variant_two->variant??'')/ @upper($price->variant_three->variant??'')
+                                            @upper($price->variant_one==null?'':$price->variant_one->variant.'/') @upper($price->variant_two!=null?$price->variant_two->variant.'/':'') @upper($price->variant_three!=null?$price->variant_three->variant.'/':'')
                                         </dt>
                                         <dd class="col-sm-9">
                                             <dl class="row mb-0">

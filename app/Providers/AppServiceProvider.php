@@ -28,7 +28,7 @@ class AppServiceProvider extends ServiceProvider
         Schema::defaultStringLength(191);
 
         Blade::directive('upper', function ($s) {
-        return "<?php echo ucfirst(trans($s)); ?>";
-    });
+            return "<?php echo ucfirst(trans($s)); ?>";
+        });
     }
 }

@@ -6,8 +6,11 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\ProductVariantPrice;
 use App\Models\Variant;
+use App\Models\ProductImage;
 use Illuminate\Http\Request;
 use App\Traits\ProductTrait;
+use Validator;
+use Session;
 use Carbon;
 class ProductController extends Controller
 {
@@ -52,68 +55,27 @@ class ProductController extends Controller
      */
     public function store(Request $request)
     {
-        
-        if($this->uploadImage($request)){
-            return 'This image field is required';
-        }
-        $imagepath=$this->uploadImage($request);
-        
-        return $request;
-        return $request->file->getClientOriginalExtension();
-       $prices=$request->product_variant_prices;
-
-        $vatrints=[
-            'product_variant_one',
-            'product_variant_two',
-            'product_variant_three',
-        ];
-
+       //return $request;
+        $this->data_validate($request);
         $product_id=Product::create([
             'title'=>$request['title'],
             'sku'=>$request['sku'],
             'description'=>$request['description']
         ])->id;
-        
-        $cross_products;
-        foreach ($request->product_variant as $key => $value) {
-            foreach ($value['tags'] as $k => $val) {
-                $product_variant_ids[$key][]= ProductVariant::create([
-                    'variant'=>$val,
-                    'variant_id'=>$value['option'],
-                    'product_id'=>$product_id,
-                ])->id;  
-            }
+
+        $imagepath=$this->uploadImage($request);
+        foreach ($imagepath as $key => $value) {
+            ProductImage::create([
+                'product_id'=>$product_id,
+                'file_path'=>$value,
+            ]);
         }
 
-        $cross_products=collect($product_variant_ids[0]);
-        if (array_key_exists(1,$product_variant_ids) && array_key_exists(2,$product_variant_ids)) {
-            $cross_products=$cross_products->crossJoin($product_variant_ids[1],$product_variant_ids[2]);
-        }elseif (array_key_exists(1,$product_variant_ids)) {
-            $cross_products=$cross_products->crossJoin($product_variant_ids[1]);
-        }
-        if (count($product_variant_ids) == count($product_variant_ids, COUNT_RECURSIVE)) 
-        {
-          echo 'MyArray is not multidimensional';
-        }
-        else
-        {
-            $product_prices=collect([]);
-            foreach ($cross_products as $key => $cross_product) {
-                $vrnt=[];
-                foreach ($cross_product as $tk => $tv) {
-                    $vrnt[$vatrints[$tk]]=$tv;
-                }
-                $product_prices[$key]=array_merge($vrnt,[
-                        'price'=>$prices[$key]['price'],
-                        'stock'=>$prices[$key]['stock'],
-                        'product_id'=>$product_id
-                    ]);
-            }
-            ProductVariantPrice::insert($product_prices->toArray());
-            return $product_prices;
-        }
+        $product_variant_ids=$this->insertProductVariant($request,$product_id);
+
+        $this->insertProductVariantPrices($request,$product_variant_ids,$product_id);
+        
             
-        return $cross;
     }
 
 
@@ -166,7 +128,8 @@ class ProductController extends Controller
         $data['variants'] = Variant::all();
         $data['product']=$product;
         $data['product']['product_variants']=ProductVariant::where('product_id',$product->id)->get()->groupBy('variant_id');
-         $data['prices']=$product->load('prices.variant_one','prices.variant_two','prices.variant_three');
+        $data['prices']=$product->load('prices.variant_one','prices.variant_two','prices.variant_three');
+        $data['images']=$product->load('images');
 
         return view('products.edit', $data);
     }
@@ -180,40 +143,36 @@ class ProductController extends Controller
      */
     public function update(Request $request, Product $product)
     {
-        if ($request->hasFile('file')) {
-           return 'sfsdf' ;
-        }
-        $image=$request->file('file');
-        $imageName=$image->getClientOriginalName();
-        return $imageName;
+        $product_id=$product->id;
+        $this->data_validate($request, $product_id);
         $product->update([
             'title' =>$request->title,
             'sku' =>$request->sku,
             'description' =>$request->description,
         ]);
-        $ids=array_column($request->product_variant, 'option');
-        $product->productvariants()->detach($ids);
-        $product->prices()->delete();
-        // foreach ($request->product_variant as $key => $value) {
-        //     foreach ($value['tags']  as $k => $val) {
-        //         $product->productvariants()->attach($value['option'],['variant'=>$val]);
-        //        // $variant->push([$value['option']=>['variant'=>$val]]);
-        //     }
-        // }
-        //         $product->productvariants()->attach($value['option'],['variant'=>$val]);
 
-        // $product->productvariants()->attach($variant->toArray());
-         foreach ($request->product_variant as $key => $value) {
-            foreach ($value['tags'] as $k => $val) {
-                $product_variant_ids[$key][]= ProductVariant::create([
-                    'variant'=>$val,
-                    'variant_id'=>$value['option'],
-                    'product_id'=>$product->id,
-                ])->id;  
+        if ($request->editImage) {
+            $allimages=$product->load('images');
+            foreach ($allimages->images as $key => $value) {
+                unlink(public_path('images/'.$value->file_path));
+            }
+            $product->images()->delete();
+            $imagepath=$this->uploadImage($request);
+            foreach ($imagepath as $key => $value) {
+                ProductImage::create([
+                    'product_id'=>$product_id,
+                    'file_path'=>$value,
+                ]);
             }
         }
-        return $variant;
-        return $request->product_variant;
+
+        $ids=array_column($request->product_variant, 'option');
+        $product->productvariants()->detach($ids);
+        $product_variant_ids=$this->insertProductVariant($request,$product_id);
+
+        $product->prices()->delete();
+        $this->insertProductVariantPrices($request,$product_variant_ids,$product_id);
+        
     }
     /**
      * Remove the specified resource from storage.
@@ -221,6 +180,7 @@ class ProductController extends Controller
      * @param \App\Models\Product $product
      * @return \Illuminate\Http\Response
      */
+    
     public function destroy(Product $product)
     {
         //

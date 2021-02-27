@@ -8,6 +8,24 @@ require('./bootstrap');
 require('./sb-admin');
 window.Vue = require('vue');
 
+
+/*v-form*/
+import { Form, HasError, AlertError } from 'vform'
+Vue.component(HasError.name, HasError)
+Vue.component(AlertError.name, AlertError)
+
+/*vue progress var*/
+import VueProgressBar from 'vue-progressbar'
+Vue.use(VueProgressBar, {
+  color: 'rgb(143, 255, 199)',
+  failedColor: 'red',
+  height: '4px'
+})
+
+/*iziToast*/
+import iziToast  from 'izitoast';
+window.iziToast = iziToast;
+
 /**
  * The following block of code may be used to automatically register your
  * Vue components. It will recursively scan this directory for the Vue

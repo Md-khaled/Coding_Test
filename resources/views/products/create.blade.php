@@ -6,5 +6,7 @@
     </div>
     <div id="app">
         <create-product :variants="{{ $variants }}">Loading</create-product>
+        <!-- set progressbar -->
+        <vue-progress-bar></vue-progress-bar>
     </div>
 @endsection
