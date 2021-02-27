@@ -2222,10 +2222,10 @@ __webpack_require__.r(__webpack_exports__);
 
       $.each(ref.prices.prices, function (index, value) {
         var items = '';
-        var variant_one = value.variant_one == null ? '' : value.variant_one.variant;
-        var variant_two = value.variant_two == null ? '' : value.variant_two.variant;
-        var variant_three = value.variant_three == null ? '' : value.variant_three.variant;
-        items = variant_one + '/' + variant_two + '/' + variant_three;
+        var variant_one = value.variant_one == null ? '' : value.variant_one.variant + '/';
+        var variant_two = value.variant_two == null ? '' : value.variant_two.variant + '/';
+        var variant_three = value.variant_three == null ? '' : value.variant_three.variant + '/';
+        items = variant_one + variant_two + variant_three;
         ref.product_variant_prices.push({
           title: items,
           price: value.price,

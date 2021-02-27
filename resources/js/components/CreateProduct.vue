@@ -298,10 +298,10 @@ export default {
             /*product_prices*/
             $.each(ref.prices.prices,function(index,value) {
                 let items='';
-                let variant_one=(value.variant_one == null)?'':value.variant_one.variant;
-                let variant_two=value.variant_two == null?'':value.variant_two.variant;
-                let variant_three=value.variant_three == null?'':value.variant_three.variant;
-                items=variant_one+'/'+variant_two+'/'+variant_three;
+                let variant_one=(value.variant_one == null)?'':value.variant_one.variant+'/';
+                let variant_two=value.variant_two == null?'':value.variant_two.variant+'/';
+                let variant_three=value.variant_three == null?'':value.variant_three.variant+'/';
+                items=variant_one+variant_two+variant_three;
                 
                 ref.product_variant_prices.push({
                         title: items,
