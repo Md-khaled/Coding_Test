@@ -91,9 +91,12 @@ trait ProductTrait{
             'sku' => 'bail|required|max:100|unique:products,sku,'.($id!=null?$id:''),
             'description' => 'required',
             'product_variant.*.tags' => 'required',
+            'product_variant_prices' => ($request['product_variant'])?'required':'',
+            'product_variant_prices.*.price' => 'required|numeric',
+            'product_variant_prices.*.stock' => 'required|numeric',
             'product_image' => 'required|array|min:1',
             'product_image.*' => 'required',
-            //'currency_code' => 'bail|required|string|unique:currencies,currency_code,'.($id!=null?$id:'')
+          
         ],
         [
             'product_variant.*.tags.required'=>'The variant tag field is required',

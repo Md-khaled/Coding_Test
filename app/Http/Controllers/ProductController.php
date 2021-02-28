@@ -25,7 +25,7 @@ class ProductController extends Controller
     {
        
         $variants = Variant::all();
-        $products=Product::with('prices.variant_one','prices.variant_two','prices.variant_three')->paginate(2);
+        $products=Product::with('prices.variant_one','prices.variant_two','prices.variant_three')->paginate(3);
        
         return view('products.index',compact('products','variants'));
     }
@@ -87,6 +87,14 @@ class ProductController extends Controller
      */
     public function search(Request $product)
     {
+        $this->validate($product, [
+            'title' => 'bail|required|string|max:100',
+            'variantid' => 'required|exists:variants,id',
+            'price_from' => 'required|numeric',
+            'price_to' => 'required|numeric',
+            'date' => 'required|date',
+        ]);
+        return $product;
         $title=$product->title;
         $vid=$product->variantid;
         $from=$product->price_from;
@@ -102,7 +110,7 @@ class ProductController extends Controller
         {
             return $query->with('variant_one','variant_two','variant_three')->whereBetween('price',[$from,$to]);
         }])
-        ->paginate(2);
+        ->paginate(3);
 
         $variants = Variant::all();
         return view('products.index',compact('products','variants'));

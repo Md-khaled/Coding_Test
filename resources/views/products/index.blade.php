@@ -14,6 +14,9 @@
             <div class="form-row justify-content-between">
                 <div class="col-md-2">
                     <input type="text" name="title" placeholder="Product Title" class="form-control">
+                    @error('title')
+                       <div class="text-danger">{{ $message }}</div>
+                    @enderror
                 </div>
                 <div class="col-md-2">
                     <select name="variantid" id="" class="form-control">
@@ -22,6 +25,9 @@
                         @empty
                         @endforelse
                     </select>
+                     @error('variantid')
+                       <div class="text-danger">{{ $message }}</div>
+                    @enderror
                 </div>
 
                 <div class="col-md-3">
@@ -31,10 +37,19 @@
                         </div>
                         <input type="text" name="price_from" aria-label="First name" placeholder="From" class="form-control">
                         <input type="text" name="price_to" aria-label="Last name" placeholder="To" class="form-control">
+                         @error('price_from')
+                           <div class="text-danger">{{ $message }}</div>
+                        @enderror
+                         @error('price_to')
+                           <div class="text-danger">{{ $message }}</div>
+                        @enderror
                     </div>
                 </div>
                 <div class="col-md-2">
                     <input type="date" name="date" placeholder="Date" class="form-control">
+                     @error('date')
+                       <div class="text-danger">{{ $message }}</div>
+                    @enderror
                 </div>
                 <div class="col-md-1">
                     <button type="submit" class="btn btn-primary float-right"><i class="fa fa-search"></i></button>
