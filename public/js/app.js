@@ -2061,8 +2061,8 @@ __webpack_require__.r(__webpack_exports__);
         thumbnailWidth: 215,
         maxFilesize: 0.5,
         acceptedFiles: '.jpg, .jpeg, .png .gif',
-        addRemoveLinks: true,
-        dictDefaultMessage: "<i class='fas fa-cloud-upload-alt'></i>UPLOAD ME",
+        addRemoveLinks: false,
+        dictDefaultMessage: "<i class='fas fa-cloud-upload-alt fa-5x'></i>",
         headers: {
           "My-Awesome-Header": "header value",
           "X-CSRF-TOKEN": document.head.querySelector("[name=csrf-token]").content
@@ -2079,10 +2079,37 @@ __webpack_require__.r(__webpack_exports__);
         title: 'Success',
         message: "Image upload success"
       });
-      console.log(file);
     },
-    changeImg: function changeImg() {
+    removeImage: function removeImage(file) {
+      var image = file.dataURL;
+      this.images.pop(image);
+      console.log(image);
+    },
+    showImage: function showImage() {
+      var ref = this;
+      var img = ref.images;
       this.imageEditMode = true;
+
+      if (this.imageEditMode) {
+        var file = {
+          size: 215,
+          name: 'image',
+          type: "image/png"
+        };
+        var url = '';
+        ref.$nextTick(function () {
+          for (var i = 0; i < ref.images.length; i++) {
+            console.log(img[i]);
+            this.$set(file, 'name', img[i]);
+            url = '/images/' + img[i];
+            ref.$refs.myVueDropzone.manuallyAddFile(file, url);
+          }
+        });
+      }
+    },
+    clearImg: function clearImg() {
+      this.imageEditMode = false;
+      this.$refs.myVueDropzone.$el.innerHTML = '';
       this.images = [];
     },
     newVariant: function newVariant() {
@@ -2107,6 +2134,7 @@ __webpack_require__.r(__webpack_exports__);
     checkVariant: function checkVariant() {
       var _this = this;
 
+      console.log('removed');
       var tags = [];
       this.product_variant_prices = [];
       this.product_variant.filter(function (item) {
@@ -2140,7 +2168,7 @@ __webpack_require__.r(__webpack_exports__);
 
       this.$Progress.start();
       var product = {
-        editImage: this.imageEditMode,
+        editImage: !this.imageEditMode ? true : false,
         title: this.product_name,
         sku: this.product_sku,
         description: this.description,
@@ -2192,13 +2220,18 @@ __webpack_require__.r(__webpack_exports__);
       });
     }
   },
+  created: function created() {
+    if (this.Mode == false) {
+      this.$set(this.dropzoneOptions, 'addRemoveLinks', true);
+    }
+  },
   mounted: function mounted() {
     if (this.Mode == false) {
-      this.imageEditMode = true;
+      this.imageEditMode = false;
     }
 
     if (this.Mode) {
-      this.imageEditMode = false;
+      this.imageEditMode = true;
       this.product_name = this.products.title;
       this.product_sku = this.products.sku;
       this.description = this.products.description;
@@ -2237,10 +2270,6 @@ __webpack_require__.r(__webpack_exports__);
       $.each(ref.image.images, function (key, value) {
         ref.images.push(value.file_path);
       });
-      var url = "http://127.0.0.1:8000/images/"; //this.$refs.myVueDropzone.manuallyAddFile(file, url);
-      //https://github.com/rowanwins/vue-dropzone/issues/455
-
-      console.log(this.images);
     }
   }
 });
@@ -53079,32 +53108,39 @@ var render = function() {
           _vm._m(0),
           _vm._v(" "),
           _c("div", { staticClass: "card-body border" }, [
-            !_vm.imageEditMode
+            _c(
+              "div",
+              { staticClass: "mb-4" },
+              [
+                _c("vue-dropzone", {
+                  ref: "myVueDropzone",
+                  attrs: { id: "dropzone", options: _vm.dropzoneOptions },
+                  on: {
+                    "vdropzone-success": _vm.uploadImage,
+                    "vdropzone-removed-file": _vm.removeImage,
+                    "vdropzone-mounted": _vm.showImage
+                  }
+                })
+              ],
+              1
+            ),
+            _vm._v(" "),
+            _vm.imageEditMode
               ? _c("div", [
                   _c(
                     "button",
                     {
-                      staticClass: "btn btn-primary",
+                      staticClass: "btn btn-danger float-right",
                       on: {
                         click: function($event) {
-                          return _vm.changeImg()
+                          return _vm.clearImg()
                         }
                       }
                     },
-                    [_vm._v("Change Image")]
+                    [_vm._v("Clear Image")]
                   )
                 ])
-              : _c(
-                  "div",
-                  [
-                    _c("vue-dropzone", {
-                      ref: "myVueDropzone",
-                      attrs: { id: "dropzone", options: _vm.dropzoneOptions },
-                      on: { "vdropzone-success": _vm.uploadImage }
-                    })
-                  ],
-                  1
-                )
+              : _vm._e()
           ])
         ])
       ]),
@@ -53186,7 +53222,7 @@ var render = function() {
                               on: {
                                 click: function($event) {
                                   _vm.product_variant.splice(index, 1)
-                                  _vm.checkVariant
+                                  _vm.checkVariant()
                                 }
                               }
                             },

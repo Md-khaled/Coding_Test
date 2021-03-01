@@ -24,11 +24,11 @@
                             <h6 class="m-0 font-weight-bold text-primary">Media</h6>
                         </div>
                         <div class="card-body border">
-                            <div v-if="!imageEditMode">
-                                <button @click="changeImg()" class="btn btn-primary">Change Image</button>
+                            <div class="mb-4">
+                                <vue-dropzone ref="myVueDropzone" id="dropzone" :options="dropzoneOptions" v-on:vdropzone-success="uploadImage" @vdropzone-removed-file="removeImage" @vdropzone-mounted="showImage"></vue-dropzone>
                             </div>
-                            <div v-else>
-                                <vue-dropzone ref="myVueDropzone" id="dropzone" :options="dropzoneOptions" v-on:vdropzone-success="uploadImage"></vue-dropzone>
+                            <div v-if="imageEditMode">
+                                <button @click="clearImg()" class="btn btn-danger float-right">Clear Image</button>
                             </div>
                         </div>
                     </div>
@@ -54,7 +54,7 @@
                                 </div>
                                 <div class="col-md-8">
                                     <div class="form-group">
-                                        <label v-if="product_variant.length != 1" @click="product_variant.splice(index,1); checkVariant"
+                                        <label v-if="product_variant.length != 1" @click="product_variant.splice(index,1); checkVariant()"
                                                class="float-right text-primary"
                                                style="cursor: pointer;">Remove</label>
                                         <label v-else for="">.</label>
@@ -149,8 +149,8 @@ export default {
                 thumbnailWidth: 215,
                 maxFilesize: 0.5,
                 acceptedFiles: '.jpg, .jpeg, .png .gif',
-                addRemoveLinks: true,
-                dictDefaultMessage: "<i class='fas fa-cloud-upload-alt'></i>UPLOAD ME",
+                addRemoveLinks: false,
+                dictDefaultMessage: "<i class='fas fa-cloud-upload-alt fa-5x'></i>",
                 headers: {
                     "My-Awesome-Header": "header value",
                     "X-CSRF-TOKEN": document.head.querySelector("[name=csrf-token]").content
@@ -167,10 +167,32 @@ export default {
                 title: 'Success',
                 message: "Image upload success",
             });
-            console.log(file)
         },
-        changeImg(){
+        removeImage(file){
+            let image=file.dataURL;
+            this.images.pop(image);
+            console.log(image);
+        },
+        showImage(){
+            var ref=this;
+            var img=ref.images;
             this.imageEditMode=true;
+            if (this.imageEditMode) {
+                var file = { size: 215,name:'image', type: "image/png" };
+                var url = '';
+                ref.$nextTick(function() {
+                    for (var i = 0; i <ref.images.length; i++) {
+                        console.log(img[i]);
+                        this.$set(file,'name',img[i]);
+                        url = '/images/'+img[i];
+                        ref.$refs.myVueDropzone.manuallyAddFile(file, url);
+                    }
+                });
+            }
+        },
+        clearImg(){
+            this.imageEditMode=false;
+            this.$refs.myVueDropzone.$el.innerHTML='';
             this.images=[];
         },
         newVariant() {
@@ -187,6 +209,7 @@ export default {
 
         // check the variant and render all the combination
         checkVariant() {
+            console.log('removed');
             let tags = [];
             this.product_variant_prices = [];
             this.product_variant.filter((item) => {
@@ -219,7 +242,7 @@ export default {
         saveProduct() {
             this.$Progress.start();
             let product = {
-                editImage:this.imageEditMode,
+                editImage:(!this.imageEditMode?true:false),
                 title: this.product_name,
                 sku: this.product_sku,
                 description: this.description,
@@ -270,23 +293,29 @@ export default {
 
 
     },
+    created() {
+        if (this.Mode==false) {
+            this.$set(this.dropzoneOptions,'addRemoveLinks',true);
+        }
+    },
     mounted() {
         if (this.Mode==false) {
-            this.imageEditMode=true;
+            this.imageEditMode=false;
         }
         if(this.Mode){
-            this.imageEditMode=false;
+            this.imageEditMode=true;
             this.product_name=this.products.title;
             this.product_sku=this.products.sku;
             this.description=this.products.description;
             this.product_variant=[];
             var available_variants=[];
             var ref=this;
+
             /*product_variant*/
             $.each(ref.products.product_variants,function(index,value) {
                 let tag=[];
                 available_variants[index];
-                 $.each(value,function(key,variant) {
+                $.each(value,function(key,variant) {
                     tag.push(variant.variant);
                  })
                 ref.product_variant.push({
@@ -304,22 +333,17 @@ export default {
                 items=variant_one+variant_two+variant_three;
                 
                 ref.product_variant_prices.push({
-                        title: items,
-                        price: value.price,
-                        stock: value.stock
-                    })
-            
-                
+                    title: items,
+                    price: value.price,
+                    stock: value.stock
+                })
             })
-
+            
+            
             /*images*/
             $.each(ref.image.images,function(key,value) {
                 ref.images.push(value.file_path);
             })
-            var url = "http://127.0.0.1:8000/images/";
-            //this.$refs.myVueDropzone.manuallyAddFile(file, url);
-            //https://github.com/rowanwins/vue-dropzone/issues/455
-            console.log(this.images);
         }
     }
 }
