@@ -94,7 +94,6 @@ class ProductController extends Controller
             'price_to' => 'required|numeric',
             'date' => 'required|date',
         ]);
-        return $product;
         $title=$product->title;
         $vid=$product->variantid;
         $from=$product->price_from;
